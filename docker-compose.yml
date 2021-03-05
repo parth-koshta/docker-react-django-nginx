@@ -1,0 +1,41 @@
+version: "3.9"
+   
+services:
+  db:
+    image: mysql:8.0
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=<password>
+      - MYSQL_DATABASE=<db>
+      - MYSQL_USER=root
+      - DATABASE_HOST=db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_volume:/var/lib/mysql
+  backend:
+    build: 
+      context: ./backend
+    ports:
+      - "8000:8000"
+    restart: always
+    depends_on:
+      - db
+    entrypoint: /entrypoint.sh
+    volumes:
+      - staticfiles:/backend/staticfiles
+  nginx:
+    build: 
+      context: .
+      dockerfile: ./webserver/Dockerfile
+    restart: always
+    volumes:
+      - staticfiles:/staticfiles
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+volumes:
+  mysql_volume:
+  staticfiles:
